@@ -1,0 +1,11 @@
+FROM rocker/r-ver:latest
+
+RUN mkdir /home/analysis
+
+RUN R -e "install.packages('usethis', repos='http://cran.us.r-project.org', dependencies = T); \ 
+    install.packages('devtools', repos='http://cran.us.r-project.org', dependencies = T); \
+    devtools::install_github('ColinFay/tidystringdist')"
+
+COPY myscript.R /home/analysis/myscript.R
+
+CMD R -e "source('/home/analysis/myscript.R')"

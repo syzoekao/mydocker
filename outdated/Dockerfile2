@@ -1,0 +1,51 @@
+FROM amazonlinux:latest
+
+RUN yum install -y diffutils         ## make: 'cmp'; required for modules/lapack
+RUN yum install -y findutils         ## make: 'find'; required for library/translations
+RUN yum install -y which             ## R needs it at runtime, e.g. Sys.which()
+RUN yum install -y gcc-c++
+RUN yum install -y gcc-gfortran
+RUN yum install -y zlib-devel
+RUN yum install -y bzip2-devel
+RUN yum install -y xz-devel          ## liblzma
+RUN yum install -y pcre-devel
+RUN yum install -y curl-devel
+RUN yum install -y git
+RUN yum groupinstall -y "Development Tools"
+RUN yum install -y wget
+
+RUN amazon-linux-extras install -y epel R4
+
+RUN yum install -y openssl-devel libcurl-devel libxml2-devel openssl-devel harfbuzz-devel fribidi-devel freetype-devel libpng-devel libtiff-devel libjpeg-turbo-devel 
+
+## download cmake
+RUN wget https://cmake.org/files/v3.18/cmake-3.18.0.tar.gz \
+&& tar -xvzf cmake-3.18.0.tar.gz \
+&& cd cmake-3.18.0 \
+&& ./bootstrap \
+&& make \
+&& make install
+
+## Optional
+
+RUN git clone https://github.com/libgit2/libgit2 \
+&& cd libgit2 \
+&& mkdir build && cd build \ 
+&& su \
+&& cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
+&& cmake --build . --target install \
+&& cd .. \
+&& rm -rf libgit2 \
+&& exit
+
+
+RUN yum install -y readline-devel ## Required by --with-readline=yes
+
+CMD R -e 'beg_time <- Sys.time(); \
+install.packages(c("devtools", "ggplot2", "data.table", "dplyr", "foreach", "doParallel", "wesanderson"), repos = "https://cloud.r-project.org", type = "binary"); \
+remotes::install_version("locfit", version = "1.5-9.1", repos = "http://cran.us.r-project.org"); \
+remotes::install_version("MHadaptive", version = "1.1-8", repos = "http://cran.us.r-project.org"); \
+pacs <- c("abc", "EasyABC"); \
+install.packages(pacs, repos = "https://cloud.r-project.org"); \
+print(Sys.time() - beg_time)'
+
